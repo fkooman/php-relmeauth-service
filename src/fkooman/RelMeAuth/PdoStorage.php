@@ -94,7 +94,7 @@ class PdoStorage
         $stmt = $this->db->prepare(
             sprintf(
                 'INSERT INTO %s (provider, me, access_token) VALUES(:provider, :me, :access_token)',
-                $this->prefix.'access_tokens'
+                $this->prefix.'oauth_tokens'
             )
         );
         $stmt->bindValue(':provider', $provider, PDO::PARAM_STR);
@@ -112,7 +112,7 @@ class PdoStorage
         $stmt = $this->db->prepare(
             sprintf(
                 'SELECT access_token FROM %s WHERE provider = :provider AND me = :me',
-                $this->prefix.'access_tokens'
+                $this->prefix.'oauth_tokens'
             )
         );
         $stmt->bindValue(':provider', $provider, PDO::PARAM_STR);
@@ -127,7 +127,7 @@ class PdoStorage
         $stmt = $this->db->prepare(
             sprintf(
                 'DELETE FROM %s WHERE provider = :provider AND me = :me AND access_token = :access_token)',
-                $this->prefix.'access_tokens'
+                $this->prefix.'oauth_tokens'
             )
         );
         $stmt->bindValue(':provider', $provider, PDO::PARAM_STR);
@@ -139,7 +139,7 @@ class PdoStorage
             throw new PdoStorageException('unable to delete');
         }
     }
-
+    
     public static function createTableQueries($prefix)
     {
         $query = array();

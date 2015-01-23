@@ -51,7 +51,7 @@ class GitHub
 
     public function callbackRequest($state, $code)
     {
-        $stateData = $this->pdoStorage->getIndieState('GitHub', $state);
+        $stateData = $this->pdoStorage->getIndieState($state);
         if (false === $stateData) {
             throw new \Exception('unable to find state value');
         }
@@ -65,10 +65,11 @@ class GitHub
         ->setPostField('code', $code)
         ->send()->json();
 
+        var_dump($response);
         // store access_token
         $this->pdoStorage->storeAccessToken('GitHub', $stateData['me'], $response['access_token']);
 
-        return $this->verifyProfileUrl($stateData['me'], $clientId, $redirectUri);
+        return $this->verifyProfileUrl($stateData['me'], $stateData['client_id'], $stateData['redirect_uri']);
     }
 
     public function verifyProfileUrl($me, $clientId, $redirectUri)

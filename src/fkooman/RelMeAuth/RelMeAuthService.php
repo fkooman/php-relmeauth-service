@@ -104,14 +104,20 @@ class RelMeAuthService extends Service
                 $clientId = $request->getPostParameter('client_id');
                 $redirectUri = $request->getPostParameter('redirect_uri');
 
-                // how to determine the actual provider used?
-                $verifiedMe = $this->gitHub->getVerifiedMe($clientId, $redirectUri, $code);
+                $indieCode = $this->pdoStorage->getIndieCode($code);
+
+                if ($clientId !== $indieCode['client_id']) {
+                    throw new \Exception('non matching client_id');
+                }
+                 if ($redirectUri !== $indieCode['redirect_uri']) {
+                     throw new \Exception('non matching redirect_uri');
+                 }
 
                 $response = new Response(200, 'application/x-www-form-urlencoded;charset=utf-8');
                 $response->setContent(
                     http_build_query(
                         array(
-                            'me' => $verifiedMe
+                            'me' => $indieCode['me']
                         )
                     )
                 );
@@ -127,7 +133,7 @@ class RelMeAuthService extends Service
         // must be valid (HTTPS) URLs and the host of the client_id and
         // redirect_uri must match
         $requiredParameters = array('me', 'client_id', 'redirect_uri');
-        foreach ($requestParameters as $p) {
+        foreach ($requiredParameters as $p) {
             $qp = $request->getQueryParameter($p);
             if (null === $qp) {
                 throw new BadRequestException(

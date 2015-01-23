@@ -48,11 +48,11 @@ try {
     $service->run()->sendResponse();
 } catch (Exception $e) {
     if ($e instanceof HttpException) {
-        $response = $e->getJsonResponse();
+        $response = $e->getHtmlResponse();
     } else {
         // we catch all other (unexpected) exceptions and return a 500
         $e = new InternalServerErrorException($e->getMessage());
-        $response = $e->getJsonResponse();
+        $response = $e->getHtmlResponse();
     }
     $response->sendResponse();
 }
