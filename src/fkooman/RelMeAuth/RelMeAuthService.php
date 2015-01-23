@@ -9,6 +9,9 @@ use Twig_Loader_Filesystem;
 use Twig_Environment;
 use Guzzle\Http\Client;
 use fkooman\Http\Uri;
+use fkooman\Http\Exception\UriException;
+use fkooman\Http\Exception\BadRequestException;
+use fkooman\Http\Exception\ForbiddenException;
 
 class RelMeAuthService extends Service
 {
@@ -36,30 +39,16 @@ class RelMeAuthService extends Service
             '/auth',
             function (Request $request) {
                 // first validate the request
-                $me = $request->getQueryParameter('me');
-                $clientId = $request->getQueryParameter('client_id');
-                $redirectUri = $request->getQueryParameter('redirect_uri');
-                // FIXME: none must be null
-
-                $meUri = new Uri($me);
-                $clientIdUri = new Uri($clientId);
-                $redirectUriUri = new Uri($redirectUri);
-
-                if ('https' !== $meUri->getScheme()) {
-                    throw new Exception('need https for meUri');
-                }
-                // client_id and redirect_uri need to both be https
-                //if ('https' !== $clientIdUri->getScheme() || 'https' !== $redirectUriUri->getScheme()) {
-                //    throw new Exception('need https for client_id and redirect_uri');
-                //}
-                // and both MUST have the same domain name
-                if ($clientIdUri->getHost() !== $redirectUriUri->getHost()) {
-                    throw new Exception('host names of client_id and redirect_uri do not match');
-                }
-                // initial validation complete
+                $this->validateQueryParameters($request);
 
                 $relMeFetcher = new RelMeFetcher($this->client);
-                $relMeFetcher->fetchRel($me);
+                $relLinks = $relMeFetcher->fetchRel(
+                    $request->getQueryParameter('me')
+                );
+    
+                // filter out the providers we do not support
+                $providerFilter = new ProviderFilter();
+                $supportedProviders = $providerFilter->filter($relLinks);
 
                 $loader = new Twig_Loader_Filesystem(
                     dirname(dirname(dirname(__DIR__))).'/views'
@@ -69,8 +58,6 @@ class RelMeAuthService extends Service
                 $providerSelector = $twig->render(
                     'providerSelector.twig',
                     array(
-                        //'configs' => $configs,
-                        //'templateData' => $this->templateData,
                     )
                 );
                 $response = new Response();
@@ -82,17 +69,22 @@ class RelMeAuthService extends Service
         $this->post(
             '/auth',
             function (Request $request) {
-                //$s = new Session('RelMeAuth', false);
-                // CSRF protection by validating the referer!
+                $fullRequestUri = $request->getRequestUri()->getUri();
+                $referrerUri = $request->getHeader("HTTP_REFERER");
+
+                if ($fullRequestUri !== $referrerUri) {
+                    throw new ForbiddenException(
+                        "referrer does not match request URL"
+                    );
+                }
 
                 $me = $request->getQueryParameter('me');
                 $clientId = $request->getQueryParameter('client_id');
                 $redirectUri = $request->getQueryParameter('redirect_uri');
 
                 $selectedProvider = $request->getPostParameter('selectedProvider');
+                // FIXME: make the selectedProvider actually do something
 
-                // user chose a provider
-                // return the correct provider instance shizzle
                 return $this->gitHub->verifyProfileUrl($me, $clientId, $redirectUri);
             }
         );
@@ -127,5 +119,40 @@ class RelMeAuthService extends Service
                 return $response;
             }
         );
+    }
+
+    private function validateQueryParameters(Request $request)
+    {
+        // we must have 'me', 'client_id' and 'redirect_uri' and they all
+        // must be valid (HTTPS) URLs and the host of the client_id and
+        // redirect_uri must match
+        $requiredParameters = array('me', 'client_id', 'redirect_uri');
+        foreach ($requestParameters as $p) {
+            $qp = $request->getQueryParameter($p);
+            if (null === $qp) {
+                throw new BadRequestException(
+                    sprintf('missing parameter "%s"', $p)
+                );
+            }
+            try {
+                $u = new Uri($qp);
+                if ('https' !== $u->getScheme()) {
+                    throw new BadRequestException(
+                        sprintf('URL must be HTTPS for "%s"', $p)
+                    );
+                }
+            } catch (UriException $e) {
+                throw new BadRequestException(
+                    sprintf('invalid URL for "%s"', $p)
+                );
+            }
+        }
+        $clientId = new Uri($request->getQueryParameter('client_id'));
+        $redirectUri = new Uri($request->getQueryParameter('redirect_uri'));
+        if ($clientId->getHost() !== $redirectUri->getHost()) {
+            throw new BadRequestException(
+                'host for client_id and redirect_uri must match'
+            );
+        }
     }
 }
