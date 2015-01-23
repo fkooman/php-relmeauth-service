@@ -1,0 +1,10 @@
+[PdoStorage]
+dsn = "sqlite:/var/lib/php-relmeauth-service/storage.sqlite"
+;dsn = "mysql:host=localhost;dbname=php-relmeauth-service"
+;username = "php-relmeauth-service"
+;password = "s3cr3t"
+;dsn = "pgsql:host=localhost;port=5432;dbname=XYZ;user=ABC;password=DEF"
+
+[GitHub]
+client_id = 'foo'
+client_secret = 'bar'

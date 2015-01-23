@@ -1,0 +1,20 @@
+#!/usr/bin/php
+<?php
+
+require_once dirname(__DIR__).'/vendor/autoload.php';
+
+use fkooman\Ini\IniReader;
+use fkooman\RelMeAuth\PdoStorage;
+
+$iniReader = IniReader::fromFile(
+    dirname(__DIR__).'/config/config.ini'
+);
+
+$pdo = new PDO(
+    $iniReader->v('PdoStorage', 'dsn'),
+    $iniReader->v('PdoStorage', 'username', false),
+    $iniReader->v('PdoStorage', 'password', false)
+);
+
+$pdoStorage = new PdoStorage($pdo);
+$pdoStorage->initDatabase();
