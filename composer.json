@@ -9,7 +9,7 @@
     "name": "fkooman/php-relmeauth-service",
     "require": {
         "fkooman/ini": "~0.2.0",
-        "fkooman/rest": "~0.6.3",
+        "fkooman/rest": "~0.6.4",
         "guzzle/guzzle": "~3.0",
         "twig/twig": "~1.15"
     }
