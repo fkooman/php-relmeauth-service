@@ -2,11 +2,12 @@
 This is a RelMeAuth implementation written in PHP.
 
 # Installation
-RPM packages are (almost) available for Fedora and CentOS/RHEL:
+RPM packages are available for Fedora and CentOS/RHEL:
 
     $ sudo yum -y install yum-plugin-copr
-    $ sudo yum copr enable fkooman/php-relmeauth
-    $ sudo yum -y install php-relmeauth-service
+    $ yum copr enable -y fkooman/php-base
+    $ yum copr enable -y fkooman/php-relmeauth
+    $ yum install -y php-relmeauth-service
 
 Restart Apache:
 
@@ -20,7 +21,7 @@ other database please first modify the configuration file
     $ sudo -u apache php-relmeauth-service-init
 
 Also make sure you configure the details for the providers you want to use 
-with php-relmeauth-service.
+with php-relmeauth-service in `/etc/php-relmeauth-service/config.ini`.
 
 # License
 Licensed under the GNU Affero General Public License as published by the Free 
