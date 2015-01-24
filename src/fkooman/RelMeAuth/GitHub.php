@@ -4,6 +4,7 @@ namespace fkooman\RelMeAuth;
 
 use Guzzle\Http\Client;
 use fkooman\Http\RedirectResponse;
+use Guzzle\Http\Exception\ClientErrorResponseException;
 
 class GitHub
 {
@@ -79,18 +80,30 @@ class GitHub
             return $this->authorizeRequest($me, $clientId, $redirectUri);
         }
 
-        $response = $this->client->get('https://api.github.com/user')->setHeader(
-            'Authorization', sprintf('Bearer %s', $accessToken['access_token'])
-        )->send()->json();
+        try {
+            $response = $this->client->get(
+                'https://api.github.com/user'
+            )->setHeader(
+                'Authorization',
+                sprintf('Bearer %s', $accessToken['access_token'])
+            )->send()->json();
 
-        if ($response['blog'] !== $me) {
-            throw new \Exception('url does not match');
+            if ($response['blog'] !== $me) {
+                throw new \Exception('url does not match');
+            }
+
+            // store indie code
+            $code = bin2hex(openssl_random_pseudo_bytes(16));
+            $this->pdoStorage->storeIndieCode('GitHub', $me, $clientId, $redirectUri, $code);
+
+            return new RedirectResponse(sprintf('%s?code=%s', $redirectUri, $code), 302);
+        } catch (ClientErrorResponseException $e) {
+            if (401 === $e->getResponse()->getStatusCode()) {
+                $this->pdoStorage->deleteAccessToken('GitHub', $me, $accessToken['access_token']);
+
+                return $this->authorizeRequest($me, $clientId, $redirectUri);
+            }
+            throw $e;
         }
-
-        // store indie code
-        $code = bin2hex(openssl_random_pseudo_bytes(16));
-        $this->pdoStorage->storeIndieCode('GitHub', $me, $clientId, $redirectUri, $code);
-
-        return new RedirectResponse(sprintf('%s?code=%s', $redirectUri, $code), 302);
     }
 }

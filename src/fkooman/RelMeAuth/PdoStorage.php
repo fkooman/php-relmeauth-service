@@ -126,13 +126,13 @@ class PdoStorage
     {
         $stmt = $this->db->prepare(
             sprintf(
-                'DELETE FROM %s WHERE provider = :provider AND me = :me AND access_token = :access_token)',
+                'DELETE FROM %s WHERE provider = :provider AND me = :me AND access_token = :access_token',
                 $this->prefix.'oauth_tokens'
             )
         );
         $stmt->bindValue(':provider', $provider, PDO::PARAM_STR);
         $stmt->bindValue(':me', $me, PDO::PARAM_STR);
-        $stmt->bindValue(':access_token', $access_token, PDO::PARAM_STR);
+        $stmt->bindValue(':access_token', $accessToken, PDO::PARAM_STR);
         $stmt->execute();
 
         if (1 !== $stmt->rowCount()) {
