@@ -49,9 +49,23 @@ class PdoStorage
         );
         $stmt->bindValue(':state', $state, PDO::PARAM_STR);
         $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // DELETE IT BEFORE RETURNING
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt = $this->db->prepare(
+            sprintf(
+                'DELETE FROM %s WHERE state = :state',
+                $this->prefix.'indie_states'
+            )
+        );
+        $stmt->bindValue(':state', $state, PDO::PARAM_STR);
+        $stmt->execute();
+
+        if (1 === $stmt->rowCount()) {
+            // state was deleted, return the result
+            return $result;
+        }
+
+        return false;
     }
 
     public function storeIndieCode($provider, $me, $clientId, $redirectUri, $code)
@@ -84,9 +98,23 @@ class PdoStorage
         );
         $stmt->bindValue(':code', $code, PDO::PARAM_STR);
         $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // DELETE IT BEFORE RETURNING
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt = $this->db->prepare(
+            sprintf(
+                'DELETE FROM %s WHERE code = :code',
+                $this->prefix.'indie_codes'
+            )
+        );
+        $stmt->bindValue(':code', $code, PDO::PARAM_STR);
+        $stmt->execute();
+
+        if (1 === $stmt->rowCount()) {
+            // code was deleted, return the result
+            return $result;
+        }
+
+        return false;
     }
 
     public function storeAccessToken($provider, $me, $accessToken)
