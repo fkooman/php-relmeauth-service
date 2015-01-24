@@ -23,6 +23,9 @@ class ProviderFilter
                     case 'github.com':
                         $supportedProviders['GitHub'] = $meLink;
                         break;
+#                    case 'twitter.com':
+#                        $supportedProviders['Twitter'] = $meLink;
+#                        break;
                     default:
                 }
             } catch (UriException $e) {
