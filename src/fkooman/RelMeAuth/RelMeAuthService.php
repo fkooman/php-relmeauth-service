@@ -122,6 +122,19 @@ class RelMeAuthService extends Service
 
                 $indieCode = $this->pdoStorage->getIndieCode($code);
 
+                if (false === $indieCode) {
+                    $response = new Response(404, 'application/x-www-form-urlencoded;charset=utf-8');
+                    $response->setContent(
+                        http_build_query(
+                            array(
+                                'error' => 'invalid_request',
+                                'error_description' => 'the code provided was not valid',
+                            )
+                        )
+                    );
+                    return $response;
+                }
+
                 if ($clientId !== $indieCode['client_id']) {
                     throw new \Exception('non matching client_id');
                 }
