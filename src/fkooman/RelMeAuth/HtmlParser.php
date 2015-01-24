@@ -18,8 +18,6 @@
 namespace fkooman\RelMeAuth;
 
 use DomDocument;
-use fkooman\Http\Uri;
-use fkooman\Http\Exception\UriException;
 
 class HtmlParser
 {

@@ -18,7 +18,7 @@
 namespace fkooman\RelMeAuth;
 
 use fkooman\Http\Uri;
-use fkooman\Http\UriException;
+use fkooman\Http\Exception\UriException;
 
 class ProviderFilter
 {
