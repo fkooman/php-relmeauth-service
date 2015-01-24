@@ -120,16 +120,17 @@ class RelMeAuthService extends Service
                 $clientId = $request->getPostParameter('client_id');
                 $redirectUri = $request->getPostParameter('redirect_uri');
 
+                // FIXME: all these parameters above are required, if any of them
+                // is missing we should throw a 400 bad request
+
                 $indieCode = $this->pdoStorage->getIndieCode($code);
 
                 if (false === $indieCode) {
-                    $response = new Response(404, 'application/x-www-form-urlencoded;charset=utf-8');
+                    $response = new FormResponse(404);
                     $response->setContent(
-                        http_build_query(
-                            array(
-                                'error' => 'invalid_request',
-                                'error_description' => 'the code provided was not valid',
-                            )
+                        array(
+                            'error' => 'invalid_request',
+                            'error_description' => 'the code provided was not valid',
                         )
                     );
                     return $response;
@@ -138,19 +139,16 @@ class RelMeAuthService extends Service
                 if ($clientId !== $indieCode['client_id']) {
                     throw new \Exception('non matching client_id');
                 }
-                 if ($redirectUri !== $indieCode['redirect_uri']) {
-                     throw new \Exception('non matching redirect_uri');
-                 }
+                if ($redirectUri !== $indieCode['redirect_uri']) {
+                    throw new \Exception('non matching redirect_uri');
+                }
 
-                $response = new Response(200, 'application/x-www-form-urlencoded;charset=utf-8');
+                $response = new FormResponse();
                 $response->setContent(
-                    http_build_query(
-                        array(
-                            'me' => $indieCode['me']
-                        )
+                    array(
+                        'me' => $indieCode['me']
                     )
                 );
-
                 return $response;
             }
         );
