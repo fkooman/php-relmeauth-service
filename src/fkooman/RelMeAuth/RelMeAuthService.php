@@ -19,6 +19,7 @@ namespace fkooman\RelMeAuth;
 
 use fkooman\Http\Request;
 use fkooman\Http\Response;
+use fkooman\Http\FormResponse;
 use fkooman\Rest\Service;
 use Twig_Loader_Filesystem;
 use Twig_Environment;
