@@ -221,7 +221,7 @@ class PdoStorage
             $this->db->query($q);
         }
 
-        $tables = array('indie_codes', 'github_tokens');
+        $tables = array('indie_codes', 'github_tokens', 'twitter_tokens');
         foreach ($tables as $t) {
             // make sure the tables are empty
             $this->db->query(
