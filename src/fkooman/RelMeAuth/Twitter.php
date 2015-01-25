@@ -17,10 +17,11 @@
 
 namespace fkooman\RelMeAuth;
 
+use OAuth;
+use OAuthException;
 use fkooman\Http\RedirectResponse;
 use fkooman\Http\Request;
 use fkooman\Http\Session;
-use OAuth;
 use Guzzle\Http\Client;
 
 class Twitter
@@ -107,7 +108,7 @@ class Twitter
             $response = json_decode($this->oauth->getLastResponse(), true);
 
             $profileUrl = $response['url'];
-            // we need to follow the t.co link because Twitter conveniently decides to t.co it...
+            // we need to follow the link to deal with 't.co' shortening...
             $r = $this->client->get($profileUrl)->send();
             $profileUrl = $r->getInfo('url');
 
@@ -118,12 +119,10 @@ class Twitter
 
             throw new \Exception('expected profile url not found');
         } catch (OAuthException $e) {
-            //            $this->pdoStorage->deleteTwitterToken($me);
-
-#            if (401 === $e->getResponse()->getStatusCode()) {
-#                $this->pdoStorage->deleteGitHubToken($me, $accessToken['access_token']);
-#                return false;
-#            }
+            if (401 === $e->getCode()) {
+                $this->pdoStorage->deleteTwitterToken($me);
+                return false;
+            }
             throw $e;
         }
     }
