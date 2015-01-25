@@ -2,7 +2,7 @@
 %global github_name      php-relmeauth-service
 
 Name:       php-relmeauth-service
-Version:    0.1.0
+Version:    0.1.1
 Release:    1%{?dist}
 Summary:    RelMeAuth service written in PHP
 
@@ -97,5 +97,8 @@ fi
 %doc README.md agpl-3.0.txt composer.json config/
 
 %changelog
+* Sun Jan 25 2015 François Kooman <fkooman@tuxed.net> - 0.1.1-1
+- update to 0.1.1
+
 * Sat Jan 24 2015 François Kooman <fkooman@tuxed.net> - 0.1.0-1
 - initial package
