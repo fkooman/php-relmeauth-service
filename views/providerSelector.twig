@@ -2,18 +2,37 @@
 <html lang="en">
     <head>
         <meta charset="utf-8"/>
-        <title>Provider Selectorr</title>
+        <title>Provider Selector</title>
+        <style>
+            body {
+                font-family: sans-serif;
+                text-align: center;
+            }
+            table {
+                border: 1px solid #000;
+                margin: 50px auto;
+            }
+            td {
+                padding: 5px;
+            }
+        </style>
     </head>
     <body>
         <h1>Provider Selector</h1>
         <p>Please select your provider from the list below to authenticate.</p>
 
+        <table>
         {% for key, value in supportedProviders %}
-            <form method="post" action="">
-                <input type="hidden" name="selectedProvider" value="{{ key }}">
-                <input type="submit" value="{{ key }}">
-                {{ value }}
-            </form>
+            <tr>
+                <td>
+                    <form method="post" action="">
+                        <input type="hidden" name="selectedProvider" value="{{ key }}">
+                        <input type="submit" value="{{ key }}">
+                    </form>
+                </td>
+                <td><span>to authenticate <tt>{{ value }}</tt></span></td>
+            </tr>
         {% endfor %}
+        </table>
     </body>
 </html>
