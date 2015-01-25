@@ -17,8 +17,10 @@
 
 namespace fkooman\RelMeAuth;
 
-use Guzzle\Http\Client;
 use fkooman\Http\RedirectResponse;
+use fkooman\Http\Request;
+use fkooman\Http\Session;
+use Guzzle\Http\Client;
 use Guzzle\Http\Exception\ClientErrorResponseException;
 
 class GitHub
@@ -35,11 +37,12 @@ class GitHub
     /** @var fkooman\RelMeAuth\PdoStorage */
     private $pdoStorage;
 
-    public function __construct($clientId, $clientSecret, PdoStorage $pdoStorage, Client $client = null)
+    public function __construct($clientId, $clientSecret, PdoStorage $pdoStorage, Session $session, Client $client = null)
     {
         $this->clientId = $clientId;
         $this->clientSecret = $clientSecret;
 
+        $this->session = $session;
         $this->pdoStorage = $pdoStorage;
 
         if (null === $client) {
@@ -48,12 +51,14 @@ class GitHub
         $this->client = $client;
     }
 
-    public function authorizeRequest($me, $clientId, $redirectUri)
+    public function authorizeRequest($me)
     {
         $state = bin2hex(
             openssl_random_pseudo_bytes(16)
         );
-        $this->pdoStorage->storeIndieState('GitHub', $me, $clientId, $redirectUri, $state);
+
+        $this->session->setValue('github_me', $me);
+        $this->session->setValue('github_state', $state);
 
         return new RedirectResponse(
             sprintf(
@@ -65,11 +70,19 @@ class GitHub
         );
     }
 
-    public function callbackRequest($state, $code)
+    public function handleCallback(Request $request)
     {
-        $stateData = $this->pdoStorage->getIndieState($state);
-        if (false === $stateData) {
-            throw new \Exception('unable to find state value');
+        $state = $request->getQueryParameter('state');
+        $code = $request->getQueryParameter('code');
+
+        $sessionState = $this->session->getValue('github_state');
+        $this->session->deleteKey('github_state');
+        $sessionMe = $this->session->getValue('github_me');
+        $this->session->deleteKey('github_me');
+
+        if ($state !== $sessionState) {
+            // FIXME: do we need to make sure the returned statevalue is not null or some other bogus value?
+            throw new \Exception('state in callback does not match session state');
         }
 
         // request access_token
@@ -81,18 +94,16 @@ class GitHub
         ->setPostField('code', $code)
         ->send()->json();
 
-        var_dump($response);
         // store access_token
-        $this->pdoStorage->storeAccessToken('GitHub', $stateData['me'], $response['access_token']);
-
-        return $this->verifyProfileUrl($stateData['me'], $stateData['client_id'], $stateData['redirect_uri']);
+        //echo $sessionMe . $response['access_token'];
+        $this->pdoStorage->storeGitHubToken($sessionMe, $response['access_token']);
     }
 
-    public function verifyProfileUrl($me, $clientId, $redirectUri)
+    public function verifyProfileUrl($me)
     {
-        $accessToken = $this->pdoStorage->getAccessToken('GitHub', $me);
+        $accessToken = $this->pdoStorage->getGitHubToken($me);
         if (false === $accessToken) {
-            return $this->authorizeRequest($me, $clientId, $redirectUri);
+            return false;
         }
 
         try {
@@ -103,20 +114,16 @@ class GitHub
                 sprintf('Bearer %s', $accessToken['access_token'])
             )->send()->json();
 
-            if ($response['blog'] !== $me) {
-                throw new \Exception('url does not match');
+            // FIXME: if it does not match, should we delete the access token?
+            if ($response['blog'] === $me) {
+                return true;
             }
 
-            // store indie code
-            $code = bin2hex(openssl_random_pseudo_bytes(16));
-            $this->pdoStorage->storeIndieCode('GitHub', $me, $clientId, $redirectUri, $code);
-
-            return new RedirectResponse(sprintf('%s?code=%s', $redirectUri, $code), 302);
+            throw new \Exception('expected profile url not found');
         } catch (ClientErrorResponseException $e) {
             if (401 === $e->getResponse()->getStatusCode()) {
-                $this->pdoStorage->deleteAccessToken('GitHub', $me, $accessToken['access_token']);
-
-                return $this->authorizeRequest($me, $clientId, $redirectUri);
+                $this->pdoStorage->deleteGitHubToken($me, $accessToken['access_token']);
+                return false;
             }
             throw $e;
         }

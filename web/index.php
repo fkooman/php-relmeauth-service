@@ -23,27 +23,40 @@ use fkooman\RelMeAuth\RelMeAuthService;
 use fkooman\RelMeAuth\PdoStorage;
 use fkooman\Ini\IniReader;
 use fkooman\RelMeAuth\GitHub;
+use fkooman\Http\Session;
+use Guzzle\Http\Client;
 
 try {
     $iniReader = IniReader::fromFile(
         dirname(__DIR__).'/config/config.ini'
     );
 
+    // STORAGE
     $pdo = new PDO(
         $iniReader->v('PdoStorage', 'dsn'),
         $iniReader->v('PdoStorage', 'username', false),
         $iniReader->v('PdoStorage', 'password', false)
     );
-
     $pdoStorage = new PdoStorage($pdo);
 
-    $gitHub = new GitHub(
-        $iniReader->v('GitHub', 'client_id'),
-        $iniReader->v('GitHub', 'client_secret'),
-        $pdoStorage
+    // SESSION
+    $session = new Session('RelMeAuth', false);
+
+    // HTTP CLIENT
+    $client = new Client();
+
+    // PROVIDERS
+    $supportedProviders = array(
+        'GitHub' => new GitHub(
+            $iniReader->v('GitHub', 'client_id'),
+            $iniReader->v('GitHub', 'client_secret'),
+            $pdoStorage,
+            $session,
+            $client
+        )
     );
 
-    $service = new RelMeAuthService($pdoStorage, $gitHub);
+    $service = new RelMeAuthService($supportedProviders, $pdoStorage, $session, $client);
     $service->run()->sendResponse();
 } catch (Exception $e) {
     if ($e instanceof HttpException) {

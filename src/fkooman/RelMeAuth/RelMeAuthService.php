@@ -25,23 +25,37 @@ use Twig_Loader_Filesystem;
 use Twig_Environment;
 use Guzzle\Http\Client;
 use fkooman\Http\Uri;
+use fkooman\Http\Session;
+use fkooman\Http\RedirectResponse;
 use fkooman\Http\Exception\UriException;
 use fkooman\Http\Exception\BadRequestException;
 use fkooman\Http\Exception\ForbiddenException;
 
 class RelMeAuthService extends Service
 {
+    /** @var array */
+    private $providers;
+
     /** @var fkooman\RelMeAuth\PdoStorage */
     private $pdoStorage;
 
-    private $gitHub;
+    /** @var fkooman\Http\Session */
+    private $session;
 
-    public function __construct(PdoStorage $pdoStorage, GitHub $gitHub, Client $client = null)
+    /** @var Guzzle\Http\Client */
+    private $client;
+
+    public function __construct(array $providers, PdoStorage $pdoStorage, Session $session = null, Client $client = null)
     {
         parent::__construct();
 
+        $this->providers = $providers;
         $this->pdoStorage = $pdoStorage;
-        $this->gitHub = $gitHub;
+
+        if (null === $session) {
+            $session = new Session('RelMeAuth');
+        }
+        $this->session = $session;
 
         if (null === $client) {
             $client = new Client();
@@ -95,22 +109,59 @@ class RelMeAuthService extends Service
                     );
                 }
 
+                // verify the parameters again (although the referrer should
+                // take care of it in the normal case, it would still possible
+                // to manually POST to this URL with invalid values
+                $this->validateQueryParameters($request);
+
                 $me = $request->getQueryParameter('me');
                 $clientId = $request->getQueryParameter('client_id');
                 $redirectUri = $request->getQueryParameter('redirect_uri');
 
                 $selectedProvider = $request->getPostParameter('selectedProvider');
-                // FIXME: make the selectedProvider actually do something
 
-                return $this->gitHub->verifyProfileUrl($me, $clientId, $redirectUri);
+                $this->session->setValue('me', $me);
+                $this->session->setValue('client_id', $clientId);
+                $this->session->setValue('redirect_uri', $redirectUri);
+                $this->session->setValue('selected_provider', $selectedProvider);
+
+                $p = $this->providers[$selectedProvider];
+
+                if ($p->verifyProfileUrl($me)) {
+                    // create indiecode
+                    // redirect back to app
+                    $code = bin2hex(openssl_random_pseudo_bytes(16));
+                    $this->pdoStorage->storeIndieCode($me, $clientId, $redirectUri, $code);
+
+                    return new RedirectResponse(sprintf('%s?code=%s', $redirectUri, $code), 302);
+                }
+
+                return $p->authorizeRequest($me);
             }
         );
 
         $this->get(
             '/callback',
             function (Request $request) {
-                // how to determine the actual provider used? we need to somehow get that from the DB first
-                return $this->gitHub->callbackRequest($request->getQueryParameter('state'), $request->getQueryParameter('code'));
+                $me = $this->session->getValue('me');
+                $clientId = $this->session->getValue('client_id');
+                $redirectUri = $this->session->getValue('redirect_uri');
+                $selectedProvider = $this->session->getValue('selected_provider');
+
+                $p = $this->providers[$selectedProvider];
+                $p->handleCallback($request);
+
+                if ($p->verifyProfileUrl($me)) {
+                    // create indiecode
+                    // redirect back to app
+                    $code = bin2hex(openssl_random_pseudo_bytes(16));
+                    $this->pdoStorage->storeIndieCode($me, $clientId, $redirectUri, $code);
+
+                    return new RedirectResponse(sprintf('%s?code=%s', $redirectUri, $code), 302);
+                }
+
+                throw new \Exception('profile URL does not match');
+                // throw exception unable to authorize
             }
         );
 
