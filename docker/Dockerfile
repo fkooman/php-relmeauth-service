@@ -19,6 +19,8 @@ RUN php-relmeauth-service-init
 
 USER root
 
+RUN mkdir -p /var/log/httpd
+
 # Expose port 443 and set httpd as our entrypoint
 EXPOSE 443
 ENTRYPOINT ["/usr/sbin/httpd"]
