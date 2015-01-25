@@ -8,3 +8,7 @@ dsn = "sqlite:/var/lib/php-relmeauth-service/storage.sqlite"
 [GitHub]
 client_id = 'foo'
 client_secret = 'bar'
+
+[Twitter]
+consumer_key = 'foo'
+consumer_secret = 'bar'

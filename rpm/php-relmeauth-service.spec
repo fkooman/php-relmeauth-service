@@ -19,6 +19,7 @@ Requires:   php >= 5.3.3
 Requires:   php-openssl
 Requires:   php-pdo
 Requires:   httpd
+Requires:   php-pecl-oauth >= 1.2.3
 
 Requires:   php-composer(fkooman/json) >= 0.6.0
 Requires:   php-composer(fkooman/json) < 0.7.0

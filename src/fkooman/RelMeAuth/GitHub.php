@@ -31,11 +31,14 @@ class GitHub
     /** @var string */
     private $clientSecret;
 
-    /** @var Guzzle\Http\Client */
-    private $client;
-
     /** @var fkooman\RelMeAuth\PdoStorage */
     private $pdoStorage;
+
+    /** @var fkooman\Http\Session */
+    private $session;
+
+    /** @var Guzzle\Http\Client */
+    private $client;
 
     public function __construct($clientId, $clientSecret, PdoStorage $pdoStorage, Session $session, Client $client = null)
     {
@@ -122,7 +125,7 @@ class GitHub
             throw new \Exception('expected profile url not found');
         } catch (ClientErrorResponseException $e) {
             if (401 === $e->getResponse()->getStatusCode()) {
-                $this->pdoStorage->deleteGitHubToken($me, $accessToken['access_token']);
+                $this->pdoStorage->deleteGitHubToken($me);
                 return false;
             }
             throw $e;

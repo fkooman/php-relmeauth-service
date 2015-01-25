@@ -23,6 +23,7 @@ use fkooman\RelMeAuth\RelMeAuthService;
 use fkooman\RelMeAuth\PdoStorage;
 use fkooman\Ini\IniReader;
 use fkooman\RelMeAuth\GitHub;
+use fkooman\RelMeAuth\Twitter;
 use fkooman\Http\Session;
 use Guzzle\Http\Client;
 
@@ -50,6 +51,13 @@ try {
         'GitHub' => new GitHub(
             $iniReader->v('GitHub', 'client_id'),
             $iniReader->v('GitHub', 'client_secret'),
+            $pdoStorage,
+            $session,
+            $client
+        ),
+        'Twitter' => new Twitter(
+            $iniReader->v('Twitter', 'consumer_key'),
+            $iniReader->v('Twitter', 'consumer_secret'),
             $pdoStorage,
             $session,
             $client

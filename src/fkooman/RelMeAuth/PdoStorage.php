@@ -113,16 +113,15 @@ class PdoStorage
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function deleteGitHubToken($me, $accessToken)
+    public function deleteGitHubToken($me)
     {
         $stmt = $this->db->prepare(
             sprintf(
-                'DELETE FROM %s WHERE me = :me AND access_token = :access_token',
+                'DELETE FROM %s WHERE me = :me',
                 $this->prefix.'github_tokens'
             )
         );
         $stmt->bindValue(':me', $me, PDO::PARAM_STR);
-        $stmt->bindValue(':access_token', $accessToken, PDO::PARAM_STR);
         $stmt->execute();
 
         if (1 !== $stmt->rowCount()) {
@@ -130,6 +129,55 @@ class PdoStorage
         }
     }
     
+    public function storeTwitterToken($me, $oauthToken, $oauthTokenSecret)
+    {
+        $stmt = $this->db->prepare(
+            sprintf(
+                'INSERT INTO %s (me, oauth_token, oauth_token_secret) VALUES(:me, :oauth_token, :oauth_token_secret)',
+                $this->prefix.'twitter_tokens'
+            )
+        );
+        $stmt->bindValue(':me', $me, PDO::PARAM_STR);
+        $stmt->bindValue(':oauth_token', $oauthToken, PDO::PARAM_STR);
+        $stmt->bindValue(':oauth_token_secret', $oauthTokenSecret, PDO::PARAM_STR);
+
+        $stmt->execute();
+
+        if (1 !== $stmt->rowCount()) {
+            throw new PdoStorageException('unable to add');
+        }
+    }
+
+    public function getTwitterToken($me)
+    {
+        $stmt = $this->db->prepare(
+            sprintf(
+                'SELECT oauth_token, oauth_token_secret FROM %s WHERE me = :me',
+                $this->prefix.'twitter_tokens'
+            )
+        );
+        $stmt->bindValue(':me', $me, PDO::PARAM_STR);
+        $stmt->execute();
+
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function deleteTwitterToken($me)
+    {
+        $stmt = $this->db->prepare(
+            sprintf(
+                'DELETE FROM %s WHERE me = :me',
+                $this->prefix.'twitter_tokens'
+            )
+        );
+        $stmt->bindValue(':me', $me, PDO::PARAM_STR);
+        $stmt->execute();
+
+        if (1 !== $stmt->rowCount()) {
+            throw new PdoStorageException('unable to delete');
+        }
+    }
+
     public static function createTableQueries($prefix)
     {
         $query = array();
@@ -154,6 +202,15 @@ class PdoStorage
             $prefix.'github_tokens'
         );
 
+        $query[] = sprintf(
+            'CREATE TABLE IF NOT EXISTS %s (
+                me VARCHAR(255) NOT NULL,
+                oauth_token VARCHAR(255) NOT NULL,
+                oauth_token_secret VARCHAR(255) NOT NULL,
+                PRIMARY KEY (me)
+            )',
+            $prefix.'twitter_tokens'
+        );
         return $query;
     }
 

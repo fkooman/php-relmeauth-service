@@ -25,7 +25,6 @@ class ProviderFilter
 
     public function filter(array $meLinks)
     {
-        // we only support GitHub now
         $supportedProviders = array();
         foreach ($meLinks as $meLink) {
             try {
@@ -38,9 +37,9 @@ class ProviderFilter
                     case 'github.com':
                         $supportedProviders['GitHub'] = $meLink;
                         break;
-#                    case 'twitter.com':
-#                        $supportedProviders['Twitter'] = $meLink;
-#                        break;
+                    case 'twitter.com':
+                        $supportedProviders['Twitter'] = $meLink;
+                        break;
                     default:
                 }
             } catch (UriException $e) {
