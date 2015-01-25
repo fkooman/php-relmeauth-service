@@ -67,143 +67,163 @@ class RelMeAuthService extends Service
 
         $this->get(
             '/auth',
-            function (Request $request) {
-                // first validate the request
-                $this->validateQueryParameters($request);
-
-                $relMeFetcher = new RelMeFetcher($this->client);
-                $relLinks = $relMeFetcher->fetchRel(
-                    $request->getQueryParameter('me')
-                );
-    
-                // filter out the providers we do not support
-                $providerFilter = new ProviderFilter();
-                $supportedProviders = $providerFilter->filter($relLinks);
-
-                $loader = new Twig_Loader_Filesystem(
-                    dirname(dirname(dirname(__DIR__))).'/views'
-                );
-                $twig = new Twig_Environment($loader);
-
-                $providerSelector = $twig->render(
-                    'providerSelector.twig',
-                    array(
-                        'supportedProviders' => $supportedProviders
-                    )
-                );
-                $response = new Response();
-                $response->setContent($providerSelector);
-                return $response;
+            function (Request $request) use ($compatThis) {
+                return $compatThis->getAuth($request);
             }
         );
 
         $this->post(
             '/auth',
-            function (Request $request) {
-                $fullRequestUri = $request->getRequestUri()->getUri();
-                $referrerUri = $request->getHeader("HTTP_REFERER");
-
-                if ($fullRequestUri !== $referrerUri) {
-                    throw new ForbiddenException(
-                        "referrer does not match request URL"
-                    );
-                }
-
-                // verify the parameters again (although the referrer should
-                // take care of it in the normal case, it would still possible
-                // to manually POST to this URL with invalid values
-                $this->validateQueryParameters($request);
-
-                $me = $request->getQueryParameter('me');
-                $clientId = $request->getQueryParameter('client_id');
-                $redirectUri = $request->getQueryParameter('redirect_uri');
-
-                $selectedProvider = $request->getPostParameter('selectedProvider');
-
-                $this->session->setValue('me', $me);
-                $this->session->setValue('client_id', $clientId);
-                $this->session->setValue('redirect_uri', $redirectUri);
-                $this->session->setValue('selected_provider', $selectedProvider);
-
-                $p = $this->providers[$selectedProvider];
-
-                if ($p->verifyProfileUrl($me)) {
-                    // create indiecode
-                    // redirect back to app
-                    $code = bin2hex(openssl_random_pseudo_bytes(16));
-                    $this->pdoStorage->storeIndieCode($me, $clientId, $redirectUri, $code);
-
-                    return new RedirectResponse(sprintf('%s?code=%s', $redirectUri, $code), 302);
-                }
-
-                return $p->authorizeRequest($me);
+            function (Request $request) use ($compatThis) {
+                return $compatThis->postAuth($request);
             }
         );
 
         $this->get(
             '/callback',
-            function (Request $request) {
-                $me = $this->session->getValue('me');
-                $clientId = $this->session->getValue('client_id');
-                $redirectUri = $this->session->getValue('redirect_uri');
-                $selectedProvider = $this->session->getValue('selected_provider');
-
-                $p = $this->providers[$selectedProvider];
-                $p->handleCallback($request);
-
-                if ($p->verifyProfileUrl($me)) {
-                    // create indiecode
-                    // redirect back to app
-                    $code = bin2hex(openssl_random_pseudo_bytes(16));
-                    $this->pdoStorage->storeIndieCode($me, $clientId, $redirectUri, $code);
-
-                    return new RedirectResponse(sprintf('%s?code=%s', $redirectUri, $code), 302);
-                }
-
-                throw new \Exception('profile URL does not match');
-                // throw exception unable to authorize
+            function (Request $request) use ($compatThis) {
+                return $compatThis->getCallback($request);
             }
         );
 
         $this->post(
             '/verify',
-            function (Request $request) {
-                $code = $request->getPostParameter('code');
-                $clientId = $request->getPostParameter('client_id');
-                $redirectUri = $request->getPostParameter('redirect_uri');
-
-                // FIXME: all these parameters above are required, if any of them
-                // is missing we should throw a 400 bad request
-
-                $indieCode = $this->pdoStorage->getIndieCode($code);
-
-                if (false === $indieCode) {
-                    $response = new FormResponse(404);
-                    $response->setContent(
-                        array(
-                            'error' => 'invalid_request',
-                            'error_description' => 'the code provided was not valid',
-                        )
-                    );
-                    return $response;
-                }
-
-                if ($clientId !== $indieCode['client_id']) {
-                    throw new \Exception('non matching client_id');
-                }
-                if ($redirectUri !== $indieCode['redirect_uri']) {
-                    throw new \Exception('non matching redirect_uri');
-                }
-
-                $response = new FormResponse();
-                $response->setContent(
-                    array(
-                        'me' => $indieCode['me']
-                    )
-                );
-                return $response;
+            function (Request $request) use ($compatThis) {
+                return $compatThis->postVerify($request);
             }
         );
+    }
+
+    public function getAuth(Request $request)
+    {
+        // first validate the request
+        $this->validateQueryParameters($request);
+
+        $relMeFetcher = new RelMeFetcher($this->client);
+        $relLinks = $relMeFetcher->fetchRel(
+            $request->getQueryParameter('me')
+        );
+
+        // filter out the providers we do not support
+        $providerFilter = new ProviderFilter();
+        $supportedProviders = $providerFilter->filter($relLinks);
+
+        $loader = new Twig_Loader_Filesystem(
+            dirname(dirname(dirname(__DIR__))).'/views'
+        );
+        $twig = new Twig_Environment($loader);
+
+        $providerSelector = $twig->render(
+            'providerSelector.twig',
+            array(
+                'supportedProviders' => $supportedProviders
+            )
+        );
+        $response = new Response();
+        $response->setContent($providerSelector);
+        return $response;
+    }
+
+    public function postAuth(Request $request)
+    {
+        $fullRequestUri = $request->getRequestUri()->getUri();
+        $referrerUri = $request->getHeader("HTTP_REFERER");
+
+        if ($fullRequestUri !== $referrerUri) {
+            throw new ForbiddenException(
+                "referrer does not match request URL"
+            );
+        }
+
+        // verify the parameters again (although the referrer should
+        // take care of it in the normal case, it would still possible
+        // to manually POST to this URL with invalid values
+        $this->validateQueryParameters($request);
+
+        $me = $request->getQueryParameter('me');
+        $clientId = $request->getQueryParameter('client_id');
+        $redirectUri = $request->getQueryParameter('redirect_uri');
+
+        $selectedProvider = $request->getPostParameter('selectedProvider');
+
+        $this->session->setValue('me', $me);
+        $this->session->setValue('client_id', $clientId);
+        $this->session->setValue('redirect_uri', $redirectUri);
+        $this->session->setValue('selected_provider', $selectedProvider);
+
+        $p = $this->providers[$selectedProvider];
+
+        if ($p->verifyProfileUrl($me)) {
+            // create indiecode
+            // redirect back to app
+            $code = bin2hex(openssl_random_pseudo_bytes(16));
+            $this->pdoStorage->storeIndieCode($me, $clientId, $redirectUri, $code);
+
+            return new RedirectResponse(sprintf('%s?code=%s', $redirectUri, $code), 302);
+        }
+
+        return $p->authorizeRequest($me);
+    }
+
+    public function getCallback(Request $request)
+    {
+        $me = $this->session->getValue('me');
+        $clientId = $this->session->getValue('client_id');
+        $redirectUri = $this->session->getValue('redirect_uri');
+        $selectedProvider = $this->session->getValue('selected_provider');
+
+        $p = $this->providers[$selectedProvider];
+        $p->handleCallback($request);
+
+        if ($p->verifyProfileUrl($me)) {
+            // create indiecode
+            // redirect back to app
+            $code = bin2hex(openssl_random_pseudo_bytes(16));
+            $this->pdoStorage->storeIndieCode($me, $clientId, $redirectUri, $code);
+
+            return new RedirectResponse(sprintf('%s?code=%s', $redirectUri, $code), 302);
+        }
+
+        throw new \Exception('profile URL does not match');
+        // throw exception unable to authorize
+    }
+
+    public function postVerify(Request $request)
+    {
+        $code = $request->getPostParameter('code');
+        $clientId = $request->getPostParameter('client_id');
+        $redirectUri = $request->getPostParameter('redirect_uri');
+
+        // FIXME: all these parameters above are required, if any of them
+        // is missing we should throw a 400 bad request
+
+        $indieCode = $this->pdoStorage->getIndieCode($code);
+
+        if (false === $indieCode) {
+            $response = new FormResponse(404);
+            $response->setContent(
+                array(
+                    'error' => 'invalid_request',
+                    'error_description' => 'the code provided was not valid',
+                )
+            );
+            return $response;
+        }
+
+        if ($clientId !== $indieCode['client_id']) {
+            throw new \Exception('non matching client_id');
+        }
+        if ($redirectUri !== $indieCode['redirect_uri']) {
+            throw new \Exception('non matching redirect_uri');
+        }
+
+        $response = new FormResponse();
+        $response->setContent(
+            array(
+                'me' => $indieCode['me']
+            )
+        );
+        return $response;
     }
 
     private function validateQueryParameters(Request $request)
