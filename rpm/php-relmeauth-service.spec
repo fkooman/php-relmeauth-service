@@ -3,7 +3,7 @@
 
 Name:       php-relmeauth-service
 Version:    0.2.0
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    RelMeAuth service written in PHP
 
 Group:      Applications/Internet
@@ -21,6 +21,8 @@ Requires:   php-pdo
 Requires:   httpd
 Requires:   php-pecl-oauth >= 1.2.3
 
+Requires:   php-composer(guzzle/guzzle) >= 3.9
+Requires:   php-composer(guzzle/guzzle) < 4.0
 Requires:   php-composer(fkooman/json) >= 0.6.0
 Requires:   php-composer(fkooman/json) < 0.7.0
 Requires:   php-composer(fkooman/ini) >= 0.2.0
@@ -97,6 +99,9 @@ fi
 %doc README.md agpl-3.0.txt composer.json config/
 
 %changelog
+* Sun Jan 25 2015 François Kooman <fkooman@tuxed.net> - 0.2.0-2
+- require Guzzle
+
 * Sun Jan 25 2015 François Kooman <fkooman@tuxed.net> - 0.2.0-1
 - update to 0.2.0
 
