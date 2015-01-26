@@ -20,7 +20,7 @@ service just needs to put the certificate fingerprint on their profile page
 using the `rel="me"` link type, similar to e.g. Twitter and GitHub` links. For 
 the client certificate the link relation looks like this:
 
-    <link href="di:sha-256;eFOWtZEA76fMLgdiM5aJIfFbAR_sn7CwBgaygxzJmDw?ct=application/x-x509-user-cert" rel="me">
+    <link rel="me" href="di:sha-256;eFOWtZEA76fMLgdiM5aJIfFbAR_sn7CwBgaygxzJmDw?ct=application/x-x509-user-cert">
 
 There can be multiple such link relations to support multiple client 
 certificates, for instance on the user's different devices. The client 
