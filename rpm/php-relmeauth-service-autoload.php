@@ -14,7 +14,7 @@ $loader->registerNamespaces(
         'fkooman\\Rest'                       => $vendorDir,
         'fkooman\\Json'                       => $vendorDir,
         'fkooman\\Ini'                        => $vendorDir,
-        'fkooman\\X509',                      => $vendorDir,
+        'fkooman\\X509'                       => $vendorDir,
         'fkooman\\Http'                       => $vendorDir,
         'Symfony\\Component\\EventDispatcher' => $vendorDir,
         'Guzzle'                              => $vendorDir
