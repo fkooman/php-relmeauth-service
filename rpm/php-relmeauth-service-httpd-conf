@@ -4,6 +4,10 @@ Alias /php-relmeauth-service /usr/share/php-relmeauth-service/web
     AllowOverride None
     Options FollowSymLinks
 
+	#SSLVerifyClient optional_no_ca
+	#SSLVerifyDepth 0 
+	#SSLOptions +ExportCertData
+
     <IfModule mod_authz_core.c>
       # Apache 2.4
       Require local
