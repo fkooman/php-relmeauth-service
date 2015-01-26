@@ -2,6 +2,7 @@
 
 ## 0.4.0
 - implement initial WebId support
+- lots of cleanups all around
 
 ## 0.3.0
 - **SECURITY**: really stupid mistake where storing the access token
