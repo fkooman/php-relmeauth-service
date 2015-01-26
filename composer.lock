@@ -4,8 +4,51 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "9bcced14c90bdd2ce25a8a506326c961",
+    "hash": "60da41242e02bb160422ec07a477e012",
     "packages": [
+        {
+            "name": "fkooman/cert-parser",
+            "version": "0.1.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/fkooman/php-cert-parser.git",
+                "reference": "6ae214da10f9bd7cad58b0f03090b065c7e17193"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/fkooman/php-cert-parser/zipball/6ae214da10f9bd7cad58b0f03090b065c7e17193",
+                "reference": "6ae214da10f9bd7cad58b0f03090b065c7e17193",
+                "shasum": ""
+            },
+            "require": {
+                "ext-openssl": "*",
+                "php": ">=5.3.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "fkooman\\X509": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "François Kooman",
+                    "email": "fkooman@tuxed.net",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Ulrich Kautz",
+                    "email": "uk@fortrabbit.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Simple OpenSSL based X.509 certificate parser",
+            "time": "2015-01-26 10:21:55"
+        },
         {
             "name": "fkooman/ini",
             "version": "0.2.0",

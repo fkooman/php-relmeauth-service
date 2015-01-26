@@ -24,6 +24,7 @@ use fkooman\RelMeAuth\PdoStorage;
 use fkooman\Ini\IniReader;
 use fkooman\RelMeAuth\GitHub;
 use fkooman\RelMeAuth\Twitter;
+use fkooman\RelMeAuth\WebId;
 use fkooman\Http\Session;
 use Guzzle\Http\Client;
 
@@ -58,6 +59,13 @@ try {
         'Twitter' => new Twitter(
             $iniReader->v('Twitter', 'consumer_key'),
             $iniReader->v('Twitter', 'consumer_secret'),
+            $pdoStorage,
+            $session,
+            $client
+        ),
+        'WebId' => new WebId(
+            null,
+            null,
             $pdoStorage,
             $session,
             $client

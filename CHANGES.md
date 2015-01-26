@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.0
+- implement initial WebId support
+
 ## 0.3.0
 - **SECURITY**: really stupid mistake where storing the access token
   from the identity providers seemed like a good idea, so removed all

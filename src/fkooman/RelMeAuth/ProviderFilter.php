@@ -28,6 +28,13 @@ class ProviderFilter
         $supportedProviders = array();
         foreach ($meLinks as $meLink) {
             try {
+                // WebID
+                if (preg_match('/^x509:[a-fA-F0-9]+$/', $meLink)) {
+                    // fingerprint value
+                    $supportedProviders['WebId'] = $meLink;
+                    continue;
+                }
+
                 $meLinkUri = new Uri($meLink);
                 if ('https' !== $meLinkUri->getScheme()) {
                     // ignore non https URIs

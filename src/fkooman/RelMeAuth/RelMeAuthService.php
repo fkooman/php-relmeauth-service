@@ -99,6 +99,14 @@ class RelMeAuthService extends Service
         // first validate the request
         $this->validateQueryParameters($request);
 
+        $me = $request->getQueryParameter('me');
+        $clientId = $request->getQueryParameter('client_id');
+        $redirectUri = $request->getQueryParameter('redirect_uri');
+
+        $this->session->setValue('me', $me);
+        $this->session->setValue('client_id', $clientId);
+        $this->session->setValue('redirect_uri', $redirectUri);
+
         $relMeFetcher = new RelMeFetcher($this->client);
         $relLinks = $relMeFetcher->fetchRel(
             $request->getQueryParameter('me')
@@ -107,6 +115,8 @@ class RelMeAuthService extends Service
         // filter out the providers we do not support
         $providerFilter = new ProviderFilter();
         $supportedProviders = $providerFilter->filter($relLinks);
+
+        $this->session->setValue('supported_providers', $supportedProviders);
 
         $loader = new Twig_Loader_Filesystem(
             dirname(dirname(dirname(__DIR__))).'/views'
@@ -140,15 +150,11 @@ class RelMeAuthService extends Service
         // to manually POST to this URL with invalid values
         $this->validateQueryParameters($request);
 
-        $me = $request->getQueryParameter('me');
-        $clientId = $request->getQueryParameter('client_id');
-        $redirectUri = $request->getQueryParameter('redirect_uri');
-
         $selectedProvider = $request->getPostParameter('selectedProvider');
-
-        $this->session->setValue('me', $me);
-        $this->session->setValue('client_id', $clientId);
-        $this->session->setValue('redirect_uri', $redirectUri);
+        $supportedProviders = $this->session->getValue('supported_providers');
+        if (!array_key_exists($selectedProvider, $supportedProviders)) {
+            throw new \Exception('unsupported provider chosen');
+        }
         $this->session->setValue('selected_provider', $selectedProvider);
 
         $p = $this->providers[$selectedProvider];
