@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+- **SECURITY**: really stupid mistake where storing the access token
+  from the identity providers seemed like a good idea, so removed all
+  token storage and simplified a lot of code
+- move CSS to a separate file to also work with CSP
+
 ## 0.2.0
 - **BREAKING**: new database schema, no migration script available
 - implement Twitter backend support

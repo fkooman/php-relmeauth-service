@@ -1,0 +1,11 @@
+body {
+    font-family: sans-serif;
+    text-align: center;
+}
+table {
+    border: 1px solid #000;
+    margin: 50px auto;
+}
+td {
+    padding: 5px;
+}

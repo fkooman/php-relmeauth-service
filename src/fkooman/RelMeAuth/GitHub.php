@@ -97,37 +97,19 @@ class GitHub
         ->setPostField('code', $code)
         ->send()->json();
 
-        // store access_token
-        //echo $sessionMe . $response['access_token'];
-        $this->pdoStorage->storeGitHubToken($sessionMe, $response['access_token']);
-    }
-
-    public function verifyProfileUrl($me)
-    {
-        $accessToken = $this->pdoStorage->getGitHubToken($me);
-        if (false === $accessToken) {
-            return false;
-        }
-
         try {
             $response = $this->client->get(
                 'https://api.github.com/user'
             )->setHeader(
                 'Authorization',
-                sprintf('Bearer %s', $accessToken['access_token'])
+                sprintf('Bearer %s', $response['access_token'])
             )->send()->json();
 
-            // FIXME: if it does not match, should we delete the access token?
-            if ($response['blog'] === $me) {
-                return true;
+            if ($response['blog'] !== $sessionMe) {
+                throw new \Exception('expected profile url not found');
             }
-
-            throw new \Exception('expected profile url not found');
         } catch (ClientErrorResponseException $e) {
-            if (401 === $e->getResponse()->getStatusCode()) {
-                $this->pdoStorage->deleteGitHubToken($me);
-                return false;
-            }
+            // FIXME: maybe throw a new exception instead of leaking this exception...
             throw $e;
         }
     }

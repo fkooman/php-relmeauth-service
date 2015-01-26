@@ -82,102 +82,6 @@ class PdoStorage
         return false;
     }
 
-    public function storeGitHubToken($me, $accessToken)
-    {
-        $stmt = $this->db->prepare(
-            sprintf(
-                'INSERT INTO %s (me, access_token) VALUES(:me, :access_token)',
-                $this->prefix.'github_tokens'
-            )
-        );
-        $stmt->bindValue(':me', $me, PDO::PARAM_STR);
-        $stmt->bindValue(':access_token', $accessToken, PDO::PARAM_STR);
-        $stmt->execute();
-
-        if (1 !== $stmt->rowCount()) {
-            throw new PdoStorageException('unable to add');
-        }
-    }
-
-    public function getGitHubToken($me)
-    {
-        $stmt = $this->db->prepare(
-            sprintf(
-                'SELECT access_token FROM %s WHERE me = :me',
-                $this->prefix.'github_tokens'
-            )
-        );
-        $stmt->bindValue(':me', $me, PDO::PARAM_STR);
-        $stmt->execute();
-
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-    public function deleteGitHubToken($me)
-    {
-        $stmt = $this->db->prepare(
-            sprintf(
-                'DELETE FROM %s WHERE me = :me',
-                $this->prefix.'github_tokens'
-            )
-        );
-        $stmt->bindValue(':me', $me, PDO::PARAM_STR);
-        $stmt->execute();
-
-        if (1 !== $stmt->rowCount()) {
-            throw new PdoStorageException('unable to delete');
-        }
-    }
-    
-    public function storeTwitterToken($me, $oauthToken, $oauthTokenSecret)
-    {
-        $stmt = $this->db->prepare(
-            sprintf(
-                'INSERT INTO %s (me, oauth_token, oauth_token_secret) VALUES(:me, :oauth_token, :oauth_token_secret)',
-                $this->prefix.'twitter_tokens'
-            )
-        );
-        $stmt->bindValue(':me', $me, PDO::PARAM_STR);
-        $stmt->bindValue(':oauth_token', $oauthToken, PDO::PARAM_STR);
-        $stmt->bindValue(':oauth_token_secret', $oauthTokenSecret, PDO::PARAM_STR);
-
-        $stmt->execute();
-
-        if (1 !== $stmt->rowCount()) {
-            throw new PdoStorageException('unable to add');
-        }
-    }
-
-    public function getTwitterToken($me)
-    {
-        $stmt = $this->db->prepare(
-            sprintf(
-                'SELECT oauth_token, oauth_token_secret FROM %s WHERE me = :me',
-                $this->prefix.'twitter_tokens'
-            )
-        );
-        $stmt->bindValue(':me', $me, PDO::PARAM_STR);
-        $stmt->execute();
-
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-    public function deleteTwitterToken($me)
-    {
-        $stmt = $this->db->prepare(
-            sprintf(
-                'DELETE FROM %s WHERE me = :me',
-                $this->prefix.'twitter_tokens'
-            )
-        );
-        $stmt->bindValue(':me', $me, PDO::PARAM_STR);
-        $stmt->execute();
-
-        if (1 !== $stmt->rowCount()) {
-            throw new PdoStorageException('unable to delete');
-        }
-    }
-
     public static function createTableQueries($prefix)
     {
         $query = array();
@@ -193,24 +97,6 @@ class PdoStorage
             $prefix.'indie_codes'
         );
 
-        $query[] = sprintf(
-            'CREATE TABLE IF NOT EXISTS %s (
-                me VARCHAR(255) NOT NULL,
-                access_token VARCHAR(255) NOT NULL,
-                PRIMARY KEY (me)
-            )',
-            $prefix.'github_tokens'
-        );
-
-        $query[] = sprintf(
-            'CREATE TABLE IF NOT EXISTS %s (
-                me VARCHAR(255) NOT NULL,
-                oauth_token VARCHAR(255) NOT NULL,
-                oauth_token_secret VARCHAR(255) NOT NULL,
-                PRIMARY KEY (me)
-            )',
-            $prefix.'twitter_tokens'
-        );
         return $query;
     }
 
@@ -221,7 +107,7 @@ class PdoStorage
             $this->db->query($q);
         }
 
-        $tables = array('indie_codes', 'github_tokens', 'twitter_tokens');
+        $tables = array('indie_codes');
         foreach ($tables as $t) {
             // make sure the tables are empty
             $this->db->query(

@@ -153,15 +153,6 @@ class RelMeAuthService extends Service
 
         $p = $this->providers[$selectedProvider];
 
-        if ($p->verifyProfileUrl($me)) {
-            // create indiecode
-            // redirect back to app
-            $code = bin2hex(openssl_random_pseudo_bytes(16));
-            $this->pdoStorage->storeIndieCode($me, $clientId, $redirectUri, $code);
-
-            return new RedirectResponse(sprintf('%s?code=%s', $redirectUri, $code), 302);
-        }
-
         return $p->authorizeRequest($me);
     }
 
@@ -175,17 +166,12 @@ class RelMeAuthService extends Service
         $p = $this->providers[$selectedProvider];
         $p->handleCallback($request);
 
-        if ($p->verifyProfileUrl($me)) {
-            // create indiecode
-            // redirect back to app
-            $code = bin2hex(openssl_random_pseudo_bytes(16));
-            $this->pdoStorage->storeIndieCode($me, $clientId, $redirectUri, $code);
+        // create indiecode
+        $code = bin2hex(openssl_random_pseudo_bytes(16));
+        $this->pdoStorage->storeIndieCode($me, $clientId, $redirectUri, $code);
 
-            return new RedirectResponse(sprintf('%s?code=%s', $redirectUri, $code), 302);
-        }
-
-        throw new \Exception('profile URL does not match');
-        // throw exception unable to authorize
+        // redirect back to app
+        return new RedirectResponse(sprintf('%s?code=%s', $redirectUri, $code), 302);
     }
 
     public function postVerify(Request $request)

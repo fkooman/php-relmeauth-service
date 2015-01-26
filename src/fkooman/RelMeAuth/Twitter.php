@@ -84,25 +84,11 @@ class Twitter
         $sessionMe = $this->session->getValue('twitter_me');
         $sessionOauthTokenSecret = $this->session->getValue('twitter_oauth_token_secret');
 
-        $this->oauth->setToken($oauthToken, $sessionOauthTokenSecret);
-        $access_token_info = $this->oauth->getAccessToken('https://twitter.com/oauth/access_token');
-
-        $this->pdoStorage->storeTwitterToken(
-            $sessionMe,
-            $access_token_info["oauth_token"],
-            $access_token_info["oauth_token_secret"]
-        );
-    }
-
-    public function verifyProfileUrl($me)
-    {
-        $twitterToken = $this->pdoStorage->getTwitterToken($me);
-        if (false === $twitterToken) {
-            return false;
-        }
-
         try {
-            $this->oauth->setToken($twitterToken["oauth_token"], $twitterToken["oauth_token_secret"]);
+            $this->oauth->setToken($oauthToken, $sessionOauthTokenSecret);
+            $access_token_info = $this->oauth->getAccessToken('https://twitter.com/oauth/access_token');
+
+            $this->oauth->setToken($access_token_info["oauth_token"], $access_token_info["oauth_token_secret"]);
             $this->oauth->fetch('https://api.twitter.com/1.1/account/verify_credentials.json');
 
             $response = json_decode($this->oauth->getLastResponse(), true);
@@ -112,17 +98,11 @@ class Twitter
             $r = $this->client->get($profileUrl)->send();
             $profileUrl = $r->getInfo('url');
 
-            // FIXME: if it does not match, should we delete the access token?
-            if ($profileUrl === $me) {
-                return true;
+            if ($profileUrl !== $sessionMe) {
+                throw new \Exception('expected profile url not found');
             }
-
-            throw new \Exception('expected profile url not found');
         } catch (OAuthException $e) {
-            if (401 === $e->getCode()) {
-                $this->pdoStorage->deleteTwitterToken($me);
-                return false;
-            }
+            // FIXME: maybe throw a new exception instead of leaking this exception...
             throw $e;
         }
     }
