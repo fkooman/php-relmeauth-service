@@ -29,8 +29,7 @@ class ProviderFilter
         foreach ($meLinks as $meLink) {
             try {
                 // WebID
-                if (preg_match('/^x509:[a-fA-F0-9]+$/', $meLink)) {
-                    // fingerprint value
+                if (preg_match('/^di:sha-256;[a-zA-Z0-9_-]+\?ct=application\/x-x509-user-cert$/', $meLink)) {
                     $supportedProviders['WebId'] = $meLink;
                     continue;
                 }

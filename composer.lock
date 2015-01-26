@@ -4,20 +4,20 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "60da41242e02bb160422ec07a477e012",
+    "hash": "4134ac017a09a652ccb0ee2760480fdc",
     "packages": [
         {
             "name": "fkooman/cert-parser",
-            "version": "0.1.6",
+            "version": "0.1.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/fkooman/php-cert-parser.git",
-                "reference": "6ae214da10f9bd7cad58b0f03090b065c7e17193"
+                "reference": "fb926c570c7ba6055073652c791c5a948a2ce94a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fkooman/php-cert-parser/zipball/6ae214da10f9bd7cad58b0f03090b065c7e17193",
-                "reference": "6ae214da10f9bd7cad58b0f03090b065c7e17193",
+                "url": "https://api.github.com/repos/fkooman/php-cert-parser/zipball/fb926c570c7ba6055073652c791c5a948a2ce94a",
+                "reference": "fb926c570c7ba6055073652c791c5a948a2ce94a",
                 "shasum": ""
             },
             "require": {
@@ -47,7 +47,7 @@
                 }
             ],
             "description": "Simple OpenSSL based X.509 certificate parser",
-            "time": "2015-01-26 10:21:55"
+            "time": "2015-01-26 11:54:01"
         },
         {
             "name": "fkooman/ini",

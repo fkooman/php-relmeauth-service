@@ -67,7 +67,7 @@ class WebId
     public function handleCallback(Request $request)
     {
         $supportedProviders = $this->session->getValue('supported_providers');
-        $meFingerprint = strtolower($supportedProviders['WebId']);
+        $meFingerprint = $supportedProviders['WebId'];
 
         $clientCert = $request->getHeader('SSL_CLIENT_CERT');
         try {
@@ -77,8 +77,13 @@ class WebId
             // to use a 'proper' scheme to represent the hash...
             //    http://tools.ietf.org/html/draft-hallambaker-digesturi-02
             //    https://github.com/Spomky-Labs/base64url
+            $certFingerprint = sprintf(
+                'di:sha-256;%s?ct=application/x-x509-user-cert',
+                $certParser->getFingerPrint('sha256', true)
+            );
 
-            $certFingerprint = 'x509:'.$certParser->getFingerPrint('sha256');
+            //die($certFingerprint);
+
             if ($certFingerprint !== $meFingerprint) {
                 throw new \Exception('fingerprint does not match');
             }
