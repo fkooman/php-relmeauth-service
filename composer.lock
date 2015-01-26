@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "fkooman/cert-parser",
-            "version": "0.1.7",
+            "version": "0.1.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/fkooman/php-cert-parser.git",
-                "reference": "fb926c570c7ba6055073652c791c5a948a2ce94a"
+                "reference": "3eda8e6e8a75be9f3a887ee863db04ea7a2f61de"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fkooman/php-cert-parser/zipball/fb926c570c7ba6055073652c791c5a948a2ce94a",
-                "reference": "fb926c570c7ba6055073652c791c5a948a2ce94a",
+                "url": "https://api.github.com/repos/fkooman/php-cert-parser/zipball/3eda8e6e8a75be9f3a887ee863db04ea7a2f61de",
+                "reference": "3eda8e6e8a75be9f3a887ee863db04ea7a2f61de",
                 "shasum": ""
             },
             "require": {
@@ -47,7 +47,7 @@
                 }
             ],
             "description": "Simple OpenSSL based X.509 certificate parser",
-            "time": "2015-01-26 11:54:01"
+            "time": "2015-01-26 18:26:46"
         },
         {
             "name": "fkooman/ini",

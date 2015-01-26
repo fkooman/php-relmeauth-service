@@ -20,6 +20,8 @@ namespace fkooman\RelMeAuth;
 use fkooman\Http\RedirectResponse;
 use fkooman\Http\Request;
 use fkooman\Http\Session;
+use fkooman\Http\Exception\BadRequestException;
+use fkooman\Http\Exception\ForbiddenException;
 use Guzzle\Http\Client;
 use Guzzle\Http\Exception\ClientErrorResponseException;
 
@@ -31,22 +33,24 @@ class GitHub
     /** @var string */
     private $clientSecret;
 
-    /** @var fkooman\RelMeAuth\PdoStorage */
-    private $pdoStorage;
-
     /** @var fkooman\Http\Session */
     private $session;
 
     /** @var Guzzle\Http\Client */
     private $client;
 
-    public function __construct($clientId, $clientSecret, PdoStorage $pdoStorage, Session $session, Client $client = null)
+    const ACCESS_TOKEN_URI = 'https://github.com/login/oauth/access_token';
+    const USER_API_URI = 'https://api.github.com/user';
+
+    public function __construct($clientId, $clientSecret, Session $session = null, Client $client = null)
     {
         $this->clientId = $clientId;
         $this->clientSecret = $clientSecret;
 
+        if (null === $session) {
+            $session = new Session('GitHub');
+        }
         $this->session = $session;
-        $this->pdoStorage = $pdoStorage;
 
         if (null === $client) {
             $client = new Client();
@@ -78,39 +82,42 @@ class GitHub
         $state = $request->getQueryParameter('state');
         $code = $request->getQueryParameter('code');
 
-        $sessionState = $this->session->getValue('github_state');
-        $this->session->deleteKey('github_state');
         $sessionMe = $this->session->getValue('github_me');
         $this->session->deleteKey('github_me');
+        $sessionState = $this->session->getValue('github_state');
+        $this->session->deleteKey('github_state');
 
         if ($state !== $sessionState) {
-            // FIXME: do we need to make sure the returned statevalue is not null or some other bogus value?
-            throw new \Exception('state in callback does not match session state');
+            throw new BadRequestException('callback state value does not match authorize state');
         }
 
-        // request access_token
+        // request an access token
         $response = $this->client->post(
-            'https://github.com/login/oauth/access_token'
-        )->setPostField('client_id', $this->clientId)
-        ->setHeader('Accept', 'application/json')
-        ->setPostField('client_secret', $this->clientSecret)
-        ->setPostField('code', $code)
-        ->send()->json();
+            GitHub::ACCESS_TOKEN_URI
+        )->setHeader(
+            'Accept',
+            'application/json'
+        )->setPostField(
+            'client_id',
+            $this->clientId
+        )->setPostField(
+            'client_secret',
+            $this->clientSecret
+        )->setPostField(
+            'code',
+            $code
+        )->send()->json();
 
-        try {
-            $response = $this->client->get(
-                'https://api.github.com/user'
-            )->setHeader(
-                'Authorization',
-                sprintf('Bearer %s', $response['access_token'])
-            )->send()->json();
+        // get the user data
+        $response = $this->client->get(
+            GitHub::USER_API_URI
+        )->setHeader(
+            'Authorization',
+            sprintf('Bearer %s', $response['access_token'])
+        )->send()->json();
 
-            if ($response['blog'] !== $sessionMe) {
-                throw new \Exception('expected profile url not found');
-            }
-        } catch (ClientErrorResponseException $e) {
-            // FIXME: maybe throw a new exception instead of leaking this exception...
-            throw $e;
+        if ($response['blog'] !== $sessionMe) {
+            throw new ForbiddenException('profile URL does not match expected value');
         }
     }
 }

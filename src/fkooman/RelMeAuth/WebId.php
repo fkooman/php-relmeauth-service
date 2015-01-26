@@ -26,28 +26,18 @@ use fkooman\X509\CertParserException;
 
 class WebId
 {
-    /** @var string */
-    private $clientId;
-        
-    /** @var string */
-    private $clientSecret;
-
-    /** @var fkooman\RelMeAuth\PdoStorage */
-    private $pdoStorage;
-
     /** @var fkooman\Http\Session */
     private $session;
 
     /** @var Guzzle\Http\Client */
     private $client;
 
-    public function __construct($clientId, $clientSecret, PdoStorage $pdoStorage, Session $session, Client $client = null)
+    public function __construct(Session $session = null, Client $client = null)
     {
-        $this->clientId = $clientId;
-        $this->clientSecret = $clientSecret;
-
+        if (null === $session) {
+            $session = new Session('WebId');
+        }
         $this->session = $session;
-        $this->pdoStorage = $pdoStorage;
 
         if (null === $client) {
             $client = new Client();
@@ -70,26 +60,19 @@ class WebId
         $meFingerprint = $supportedProviders['WebId'];
 
         $clientCert = $request->getHeader('SSL_CLIENT_CERT');
-        try {
-            $certParser = new CertParser($clientCert);
-                        
-            // match it with the 'WebID' => 'x509:xyz'
-            // to use a 'proper' scheme to represent the hash...
-            //    http://tools.ietf.org/html/draft-hallambaker-digesturi-02
-            //    https://github.com/Spomky-Labs/base64url
-            $certFingerprint = sprintf(
-                'di:sha-256;%s?ct=application/x-x509-user-cert',
-                $certParser->getFingerPrint('sha256', true)
+        $certParser = new CertParser($clientCert);
+        $certFingerprint = sprintf(
+            'di:sha-256;%s?ct=application/x-x509-user-cert',
+            $certParser->getFingerPrint('sha256', true)
+        );
+
+        if ($certFingerprint !== $meFingerprint) {
+            throw new ForbiddenException(
+                sprintf(
+                    'fingerprint does not match, we expected to find "%s"',
+                    $certFingerprint
+                )
             );
-
-            //die($certFingerprint);
-
-            if ($certFingerprint !== $meFingerprint) {
-                throw new \Exception(sprintf('fingerprint does not match, we expected to find "%s"', $certFingerprint));
-            }
-        } catch (CertParserException $e) {
-            // FIXME: do something with this?
-            throw $e;
         }
     }
 }

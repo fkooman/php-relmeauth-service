@@ -153,11 +153,13 @@ class RelMeAuthService extends Service
         $selectedProvider = $request->getPostParameter('selectedProvider');
         $supportedProviders = $this->session->getValue('supported_providers');
         if (!array_key_exists($selectedProvider, $supportedProviders)) {
-            throw new \Exception('unsupported provider chosen');
+            throw new BadRequestException('unsupported provider chosen');
         }
         $this->session->setValue('selected_provider', $selectedProvider);
 
         $p = $this->providers[$selectedProvider];
+
+        $me = $this->session->getValue('me');
 
         return $p->authorizeRequest($me);
     }
@@ -183,11 +185,17 @@ class RelMeAuthService extends Service
     public function postVerify(Request $request)
     {
         $code = $request->getPostParameter('code');
+        if (null === $code) {
+            throw new BadRequestException('missing code');
+        }
         $clientId = $request->getPostParameter('client_id');
+        if (null === $clientId) {
+            throw new BadRequestException('missing client_id');
+        }
         $redirectUri = $request->getPostParameter('redirect_uri');
-
-        // FIXME: all these parameters above are required, if any of them
-        // is missing we should throw a 400 bad request
+        if (null === $redirectUri) {
+            throw new BadRequestException('missing redirect_uri');
+        }
 
         $indieCode = $this->pdoStorage->getIndieCode($code);
 
@@ -203,10 +211,10 @@ class RelMeAuthService extends Service
         }
 
         if ($clientId !== $indieCode['client_id']) {
-            throw new \Exception('non matching client_id');
+            throw new BadRequestException('non matching client_id');
         }
         if ($redirectUri !== $indieCode['redirect_uri']) {
-            throw new \Exception('non matching redirect_uri');
+            throw new BadRequestException('non matching redirect_uri');
         }
 
         $response = new FormResponse();

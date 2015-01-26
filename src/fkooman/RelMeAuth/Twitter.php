@@ -17,12 +17,13 @@
 
 namespace fkooman\RelMeAuth;
 
-use OAuth;
-use OAuthException;
+use fkooman\Http\Exception\ForbiddenException;
 use fkooman\Http\RedirectResponse;
 use fkooman\Http\Request;
 use fkooman\Http\Session;
+use fkooman\Json\Json;
 use Guzzle\Http\Client;
+use OAuth;
 
 class Twitter
 {
@@ -32,22 +33,21 @@ class Twitter
     /** @var string */
     private $clientSecret;
 
-    /** @var fkooman\RelMeAuth\PdoStorage */
-    private $pdoStorage;
-
     /** @var fkooman\Http\Session */
     private $session;
 
     /** @var Guzzle\Http\Client */
     private $client;
 
-    public function __construct($clientId, $clientSecret, PdoStorage $pdoStorage, Session $session, Client $client = null)
+    public function __construct($clientId, $clientSecret, Session $session = null, Client $client = null)
     {
         $this->clientId = $clientId;
         $this->clientSecret = $clientSecret;
 
+        if (null === $session) {
+            $session = new Session('Twitter');
+        }
         $this->session = $session;
-        $this->pdoStorage = $pdoStorage;
 
         if (null === $client) {
             $client = new Client();
@@ -82,28 +82,25 @@ class Twitter
         $oauthToken = $request->getQueryParameter('oauth_token');
 
         $sessionMe = $this->session->getValue('twitter_me');
+        $this->session->deleteKey('twitter_me');
         $sessionOauthTokenSecret = $this->session->getValue('twitter_oauth_token_secret');
+        $this->session->deleteKey('twitter_oauth_token_secret');
 
-        try {
-            $this->oauth->setToken($oauthToken, $sessionOauthTokenSecret);
-            $access_token_info = $this->oauth->getAccessToken('https://twitter.com/oauth/access_token');
+        $this->oauth->setToken($oauthToken, $sessionOauthTokenSecret);
+        $access_token_info = $this->oauth->getAccessToken('https://twitter.com/oauth/access_token');
 
-            $this->oauth->setToken($access_token_info["oauth_token"], $access_token_info["oauth_token_secret"]);
-            $this->oauth->fetch('https://api.twitter.com/1.1/account/verify_credentials.json');
+        $this->oauth->setToken($access_token_info["oauth_token"], $access_token_info["oauth_token_secret"]);
+        $this->oauth->fetch('https://api.twitter.com/1.1/account/verify_credentials.json');
 
-            $response = json_decode($this->oauth->getLastResponse(), true);
+        $response = Json::decode(
+            $this->oauth->getLastResponse()
+        );
 
-            $profileUrl = $response['url'];
-            // we need to follow the link to deal with 't.co' shortening...
-            $r = $this->client->get($profileUrl)->send();
-            $profileUrl = $r->getInfo('url');
+        // follow link found in API response to get around "t.co" shortener
+        $profileUrl = $this->client->get($response['url'])->send()->getInfo('url');
 
-            if ($profileUrl !== $sessionMe) {
-                throw new \Exception('expected profile url not found');
-            }
-        } catch (OAuthException $e) {
-            // FIXME: maybe throw a new exception instead of leaking this exception...
-            throw $e;
+        if ($profileUrl !== $sessionMe) {
+            throw new ForbiddenException('profile URL does not match expected value');
         }
     }
 }

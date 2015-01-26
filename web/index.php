@@ -42,7 +42,7 @@ try {
     $pdoStorage = new PdoStorage($pdo);
 
     // SESSION
-    $session = new Session('RelMeAuth', false);
+    $session = new Session('RelMeAuth', true);
 
     // HTTP CLIENT
     $client = new Client();
@@ -52,21 +52,16 @@ try {
         'GitHub' => new GitHub(
             $iniReader->v('GitHub', 'client_id'),
             $iniReader->v('GitHub', 'client_secret'),
-            $pdoStorage,
             $session,
             $client
         ),
         'Twitter' => new Twitter(
             $iniReader->v('Twitter', 'consumer_key'),
             $iniReader->v('Twitter', 'consumer_secret'),
-            $pdoStorage,
             $session,
             $client
         ),
         'WebId' => new WebId(
-            null,
-            null,
-            $pdoStorage,
             $session,
             $client
         )
