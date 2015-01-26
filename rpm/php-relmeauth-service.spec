@@ -29,7 +29,7 @@ Requires:   php-composer(fkooman/ini) >= 0.2.0
 Requires:   php-composer(fkooman/ini) < 0.3.0
 Requires:   php-composer(fkooman/rest) >= 0.6.4
 Requires:   php-composer(fkooman/rest) < 0.7.0
-Requires:   php-composer(fkooman/cert-parser) >= 0.1.7
+Requires:   php-composer(fkooman/cert-parser) >= 0.1.8
 Requires:   php-composer(fkooman/cert-parser) < 0.2.0
 
 Requires:   php-pear(pear.twig-project.org/Twig) >= 1.15
