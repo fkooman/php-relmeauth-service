@@ -85,7 +85,7 @@ class WebId
             //die($certFingerprint);
 
             if ($certFingerprint !== $meFingerprint) {
-                throw new \Exception('fingerprint does not match');
+                throw new \Exception(sprintf('fingerprint does not match, we expected to find "%s"', $certFingerprint));
             }
         } catch (CertParserException $e) {
             // FIXME: do something with this?
