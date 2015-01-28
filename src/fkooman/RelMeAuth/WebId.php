@@ -23,6 +23,7 @@ use fkooman\Http\Session;
 use Guzzle\Http\Client;
 use fkooman\X509\CertParser;
 use fkooman\X509\CertParserException;
+use fkooman\Http\Exception\ForbiddenException;
 
 class WebId
 {
@@ -49,7 +50,7 @@ class WebId
     {
         return new RedirectResponse(
             // FIXME: not hard coded
-            'https://indie.tuxed.net/php-relmeauth-service/index.php/callback',
+            'https://indie.tuxed.net/php-relmeauth-service/callback',
             302
         );
     }

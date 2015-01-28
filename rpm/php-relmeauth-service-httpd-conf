@@ -20,6 +20,12 @@ Alias /php-relmeauth-service /usr/share/php-relmeauth-service/web
       Allow from ::1
     </IfModule>
 
+    RewriteEngine on
+    RewriteBase /php-relmeauth-service
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php/$1 [L,QSA]
+
     <FilesMatch "index.php">
         # CSP: https://developer.mozilla.org/en-US/docs/Security/CSP
         Header set Content-Security-Policy "default-src 'self'"

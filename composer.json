@@ -12,7 +12,7 @@
         "ext-openssl": "*",
         "fkooman/cert-parser": "~0.1.7",
         "fkooman/ini": "~0.2.0",
-        "fkooman/rest": "~0.6.4",
+        "fkooman/rest": "~0.6.5",
         "guzzle/guzzle": "~3.0",
         "php": ">=5.3.3",
         "twig/twig": "~1.15"
