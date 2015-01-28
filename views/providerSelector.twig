@@ -10,15 +10,14 @@
         <p>Please select your provider from the list below to authenticate.</p>
 
         <table>
-        {% for key, value in supportedProviders %}
+        {% for provider in supportedProviders %}
             <tr>
                 <td>
-                    <form method="post" action="">
-                        <input type="hidden" name="selectedProvider" value="{{ key }}">
-                        <input type="submit" value="{{ key }}">
+                    <form method="post">
+                        <input type="hidden" name="selectedProvider" value="{{ provider }}">
+                        <input type="submit" value="{{ provider }}">
                     </form>
                 </td>
-                <td><span>to authenticate <tt>{{ value }}</tt></span></td>
             </tr>
         {% endfor %}
         </table>

@@ -25,31 +25,27 @@ class ProviderFilter
 
     public function filter(array $meLinks)
     {
-        $supportedProviders = array();
-        foreach ($meLinks as $meLink) {
-            try {
-                // WebID
-                if (preg_match('/^di:sha-256;[a-zA-Z0-9_-]+\?ct=application\/x-x509-user-cert$/', $meLink)) {
-                    $supportedProviders['WebId'] = $meLink;
-                    continue;
-                }
+        $supportedProviders = array(
+            'WebId' => array(),
+            'GitHub' => array(),
+            'Twitter' => array()
+        );
 
-                $meLinkUri = new Uri($meLink);
-                if ('https' !== $meLinkUri->getScheme()) {
-                    // ignore non https URIs
-                    continue;
-                }
-                switch ($meLinkUri->getHost()) {
-                    case 'github.com':
-                        $supportedProviders['GitHub'] = $meLink;
-                        break;
-                    case 'twitter.com':
-                        $supportedProviders['Twitter'] = $meLink;
-                        break;
-                    default:
-                }
-            } catch (UriException $e) {
-                // ignore invalid URLs
+        foreach ($meLinks as $meLink) {
+            // WebID
+            if (preg_match('/^di:sha-256;[a-zA-Z0-9_-]+\?ct=application\/x-x509-user-cert$/', $meLink)) {
+                $supportedProviders['WebId'][] = $meLink;
+                continue;
+            }
+            // GitHub
+            if (preg_match('/^https:\/\/github.com/', $meLink)) {
+                $supportedProviders['GitHub'][] = $meLink;
+                continue;
+            }
+            // Twitter
+            if (preg_match('/^https:\/\/twitter.com/', $meLink)) {
+                $supportedProviders['Twitter'][] = $meLink;
+                continue;
             }
         }
 

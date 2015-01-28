@@ -24,6 +24,7 @@ use Guzzle\Http\Client;
 use fkooman\X509\CertParser;
 use fkooman\X509\CertParserException;
 use fkooman\Http\Exception\ForbiddenException;
+use fkooman\Http\Exception\BadRequestException;
 
 class WebId
 {
@@ -49,7 +50,7 @@ class WebId
     public function authorizeRequest($me)
     {
         return new RedirectResponse(
-            // FIXME: not hard coded
+            // FIXME: do not hard code the callback URI
             'https://indie.tuxed.net/php-relmeauth-service/callback',
             302
         );
@@ -57,17 +58,19 @@ class WebId
 
     public function handleCallback(Request $request)
     {
-        $supportedProviders = $this->session->getValue('supported_providers');
-        $meFingerprint = $supportedProviders['WebId'];
-
         $clientCert = $request->getHeader('SSL_CLIENT_CERT');
+        if (null === $clientCert) {
+            throw new BadRequestException('no certificate provided');
+        }
         $certParser = new CertParser($clientCert);
         $certFingerprint = sprintf(
             'di:sha-256;%s?ct=application/x-x509-user-cert',
             $certParser->getFingerPrint('sha256', true)
         );
 
-        if ($certFingerprint !== $meFingerprint) {
+        $supportedProviders = $this->session->getValue('supported_providers');
+
+        if (!in_array($certFingerprint, $supportedProviders['WebId'])) {
             throw new ForbiddenException(
                 sprintf(
                     'fingerprint does not match, we expected to find "%s"',

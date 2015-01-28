@@ -126,7 +126,7 @@ class RelMeAuthService extends Service
         $providerSelector = $twig->render(
             'providerSelector.twig',
             array(
-                'supportedProviders' => $supportedProviders
+                'supportedProviders' => array_keys($supportedProviders)
             )
         );
         $response = new Response();

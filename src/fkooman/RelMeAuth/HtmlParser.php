@@ -43,10 +43,9 @@ class HtmlParser
             foreach ($elements as $element) {
                 $href = $element->getAttribute('href');
                 $rel = $element->getAttribute('rel');
-                if ('me' !== $rel) {
-                    continue;
+                if ('me' === $rel) {
+                    $links[] = $href;
                 }
-                $links[] = $href;
             }
         }
         return $links;
