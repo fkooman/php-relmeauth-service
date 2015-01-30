@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+- work with clean URLs (update `fkooman/rest`)
+- support multiple entries of the same provider when parsing `rel="me"` links
+
 ## 0.4.0
 - implement initial WebId support
 - lots of cleanups all around
