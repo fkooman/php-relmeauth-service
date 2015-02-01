@@ -19,7 +19,7 @@ namespace fkooman\RelMeAuth;
 
 use fkooman\Http\Request;
 use fkooman\Http\Response;
-use fkooman\Http\FormResponse;
+use fkooman\Http\JsonResponse;
 use fkooman\Rest\Service;
 use Twig_Loader_Filesystem;
 use Twig_Environment;
@@ -200,7 +200,7 @@ class RelMeAuthService extends Service
         $indieCode = $this->pdoStorage->getIndieCode($code);
 
         if (false === $indieCode) {
-            $response = new FormResponse(404);
+            $response = new JsonResponse(404);
             $response->setContent(
                 array(
                     'error' => 'invalid_request',
@@ -217,12 +217,13 @@ class RelMeAuthService extends Service
             throw new BadRequestException('non matching redirect_uri');
         }
 
-        $response = new FormResponse();
+        $response = new JsonResponse();
         $response->setContent(
             array(
                 'me' => $indieCode['me']
             )
         );
+
         return $response;
     }
 

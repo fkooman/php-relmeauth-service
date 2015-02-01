@@ -26,17 +26,11 @@ class ProviderFilter
     public function filter(array $meLinks)
     {
         $supportedProviders = array(
-            'WebId' => array(),
             'GitHub' => array(),
             'Twitter' => array()
         );
 
         foreach ($meLinks as $meLink) {
-            // WebID
-            if (preg_match('/^di:sha-256;[a-zA-Z0-9_-]+\?ct=application\/x-x509-user-cert$/', $meLink)) {
-                $supportedProviders['WebId'][] = $meLink;
-                continue;
-            }
             // GitHub
             if (preg_match('/^https:\/\/github.com/', $meLink)) {
                 $supportedProviders['GitHub'][] = $meLink;

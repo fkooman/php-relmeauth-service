@@ -17,13 +17,12 @@
 
 namespace fkooman\RelMeAuth;
 
+use fkooman\Http\Exception\BadRequestException;
+use fkooman\Http\Exception\ForbiddenException;
 use fkooman\Http\RedirectResponse;
 use fkooman\Http\Request;
 use fkooman\Http\Session;
-use fkooman\Http\Exception\BadRequestException;
-use fkooman\Http\Exception\ForbiddenException;
 use Guzzle\Http\Client;
-use Guzzle\Http\Exception\ClientErrorResponseException;
 
 class GitHub
 {
@@ -39,6 +38,7 @@ class GitHub
     /** @var Guzzle\Http\Client */
     private $client;
 
+    const AUTHORIZE_URI = 'https://github.com/login/oauth/authorize';
     const ACCESS_TOKEN_URI = 'https://github.com/login/oauth/access_token';
     const USER_API_URI = 'https://api.github.com/user';
 
@@ -69,7 +69,8 @@ class GitHub
 
         return new RedirectResponse(
             sprintf(
-                'https://github.com/login/oauth/authorize?client_id=%s&state=%s',
+                '%s?client_id=%s&state=%s',
+                GitHub::AUTHORIZE_URI,
                 $this->clientId,
                 $state
             ),
@@ -79,44 +80,48 @@ class GitHub
 
     public function handleCallback(Request $request)
     {
+        $sessionState = $this->session->getValue('github_state');
+        $sessionMe = $this->session->getValue('github_me');
+        $this->session->destroy();
+
         $state = $request->getQueryParameter('state');
         $code = $request->getQueryParameter('code');
 
-        $sessionMe = $this->session->getValue('github_me');
-        $this->session->deleteKey('github_me');
-        $sessionState = $this->session->getValue('github_state');
-        $this->session->deleteKey('github_state');
-
         if ($state !== $sessionState) {
-            throw new BadRequestException('callback state value does not match authorize state');
+            throw new BadRequestException('callback state does not match authorization state');
         }
 
-        // request an access token
-        $response = $this->client->post(
-            GitHub::ACCESS_TOKEN_URI
-        )->setHeader(
-            'Accept',
-            'application/json'
-        )->setPostField(
-            'client_id',
-            $this->clientId
-        )->setPostField(
-            'client_secret',
-            $this->clientSecret
-        )->setPostField(
-            'code',
-            $code
-        )->send()->json();
+        // ACCESS TOKEN REQUEST
+        $accessTokenRequest = $this->client->post(
+            GitHub::ACCESS_TOKEN_URI,
+            array(
+                'Accept' => 'application/json'
+            ),
+            array(
+                'client_id' => $this->clientId,
+                'client_secret' => $this->clientSecret,
+                'code' => $code
+            )
+        );
+        //echo $accessTokenRequest;
 
-        // get the user data
-        $response = $this->client->get(
-            GitHub::USER_API_URI
-        )->setHeader(
-            'Authorization',
-            sprintf('Bearer %s', $response['access_token'])
-        )->send()->json();
+        $accessTokenResponse = $accessTokenRequest->send()->json();
 
-        if ($response['blog'] !== $sessionMe) {
+        // API REQUEST
+        $apiRequest = $this->client->get(
+            GitHub::USER_API_URI,
+            array(
+                'Authorization' => sprintf('Bearer %s', $accessTokenResponse['access_token'])
+            )
+        );
+        $apiResponse = $apiRequest->send()->json();
+
+        // VERIFY PROFILE URL
+        if (!array_key_exists('blog', $apiResponse)) {
+            throw new ForbiddenException('"blog" field not found in API response, unable to verify profile URL');
+        }
+
+        if ($apiResponse['blog'] !== $sessionMe) {
             throw new ForbiddenException('profile URL does not match expected value');
         }
     }

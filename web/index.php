@@ -24,7 +24,6 @@ use fkooman\RelMeAuth\PdoStorage;
 use fkooman\Ini\IniReader;
 use fkooman\RelMeAuth\GitHub;
 use fkooman\RelMeAuth\Twitter;
-use fkooman\RelMeAuth\WebId;
 use fkooman\Http\Session;
 use Guzzle\Http\Client;
 
@@ -61,10 +60,6 @@ try {
             $session,
             $client
         ),
-        'WebId' => new WebId(
-            $session,
-            $client
-        )
     );
 
     $service = new RelMeAuthService($supportedProviders, $pdoStorage, $session, $client);
