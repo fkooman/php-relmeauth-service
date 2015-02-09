@@ -28,10 +28,10 @@ use OAuth;
 class Twitter
 {
     /** @var string */
-    private $clientId;
+    private $consumerKey;
         
     /** @var string */
-    private $clientSecret;
+    private $consumerSecret;
 
     /** @var fkooman\Http\Session */
     private $session;
@@ -39,10 +39,10 @@ class Twitter
     /** @var Guzzle\Http\Client */
     private $client;
 
-    public function __construct($clientId, $clientSecret, Session $session = null, Client $client = null)
+    public function __construct($consumerKey, $consumerSecret, Session $session = null, Client $client = null)
     {
-        $this->clientId = $clientId;
-        $this->clientSecret = $clientSecret;
+        $this->consumerKey = $consumerKey;
+        $this->consumerSecret = $consumerSecret;
 
         if (null === $session) {
             $session = new Session('Twitter');
@@ -55,8 +55,8 @@ class Twitter
         $this->client = $client;
 
         $this->oauth = new OAuth(
-            $this->clientId,
-            $this->clientSecret,
+            $this->consumerKey,
+            $this->consumerSecret,
             OAUTH_SIG_METHOD_HMACSHA1,
             OAUTH_AUTH_TYPE_URI
         );
